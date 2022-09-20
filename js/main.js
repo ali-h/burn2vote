@@ -10,6 +10,16 @@ $(window).bind("load", function() {
         return Math.floor(val * 1000) / 1000;
     }
 
+    async function getBridge () {
+        const res = await hive.api.getAccountsAsync(['hiveupme']);
+        const res2 = await ssc.findOne("tokens", "balances", { account: 'hiveupme', symbol: 'SWAP.HIVE' });
+        $("#hive_liq").text(parseInt(res[0].balance.split(" ")[0]));
+        $("#swap_liq").text(parseInt(res2.balance));
+        $("#bridge").removeClass("d-none");
+    }
+    
+    getBridge();
+
     async function getBalances (account) {
         const res = await hive.api.getAccountsAsync([account]);
         if (res.length > 0) {
