@@ -196,7 +196,7 @@ $(window).bind("load", function() {
                         currency,
                         async function (res) {
                             if (res.success === true) {
-                                $("#status").text("Successfully BURNED!");
+                                $("#status").text("Successfully Sent To Burn!");
                                 $("#status").addClass("text-success");
                                 await updateBalance();
                                 updateBurn();
@@ -216,7 +216,7 @@ $(window).bind("load", function() {
                         currency,
                         async function (res) {
                             if (res.success === true) {
-                                $("#status").text("Successfully BURNED!");
+                                $("#status").text("Successfully Sent To Burn!");
                                 $("#status").addClass("text-success");
                                 await updateBalance();
                                 updateBurn();
