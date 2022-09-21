@@ -155,6 +155,7 @@ $(window).bind("load", function() {
                     const author = post_link.split("@")[1].split("/")[0];
                     const link = post_link.split("@")[1].split("/")[1];
                     post = await hive.api.getContentAsync(author, link);
+                    if (!post.created) throw error;
                 } catch (e) {
                     $("#status").text("Invalid Post Link");
                     $("#swap").removeAttr("disabled");
