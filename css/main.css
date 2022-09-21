@@ -39,7 +39,12 @@ img {
 }
 
 .c {
-    color: #E33C3A;
+    color: #FDBB52;
+}
+
+.col {
+    background-color: #FDBB52 !important;
+    font-weight: bold;
 }
 
 .r {
