@@ -1,56 +1,55 @@
 $(window).bind("load", function() {
     const ssc = new SSC("https://ha.herpc.dtools.dev");
-    var user = null, bal = { UPME: 0, WINEX: 0 }, marketvalues;
+    var user = null, bal = { HELIOS: 0, VALUE: 0 }, marketvalues;
     const min = {
-        UPME: 20,
-        WINEX: 5
+        HELIOS: 20
     };
 
     function dec(val) {
         return Math.floor(val * 1000) / 1000;
     }
 
-    async function getBridge () {
-        const res = await hive.api.getAccountsAsync(['hiveupme']);
-        const res2 = await ssc.findOne("tokens", "balances", { account: 'hiveupme', symbol: 'SWAP.HIVE' });
-        $("#hive_liq").text(parseInt(res[0].balance.split(" ")[0]));
-        $("#swap_liq").text(parseInt(res2.balance));
-        $("#bridge").removeClass("d-none");
-    }
+    // async function getBridge () {
+    //     const res = await hive.api.getAccountsAsync(['hiveupme']);
+    //     const res2 = await ssc.findOne("tokens", "balances", { account: 'hiveupme', symbol: 'SWAP.HIVE' });
+    //     $("#hive_liq").text(parseInt(res[0].balance.split(" ")[0]));
+    //     $("#swap_liq").text(parseInt(res2.balance));
+    //     $("#bridge").removeClass("d-none");
+    // }
     
-    getBridge();
+    // getBridge();
 
     async function getBalances (account) {
         const res = await hive.api.getAccountsAsync([account]);
         if (res.length > 0) {
-            const res2 = await ssc.find("tokens", "balances", { account, symbol: { "$in": ["UPME", "WINEX"] } }, 1000, 0, []);
-            var upme = res2.find(el => el.symbol === "UPME");
-            var winex = res2.find(el => el.symbol === "WINEX");
-            return {
-                UPME: dec(parseFloat((upme) ? upme.balance : 0)),
-                WINEX: dec(parseFloat((winex) ? winex.balance : 0))
-            }
-        } else return { UPME: 0, WINEX: 0 };
+            const res2 = await ssc.find("tokens", "balances", { account, symbol: "HELIOS" }, 1000, 0, []);
+            var helios = res2.find(el => el.symbol === "HELIOS");
+            if (res2.length > 0) {
+                var val = (parseFloat(helios.balance) * parseFloat(marketvalues.HELIOS.lastPrice)) * parseFloat(marketvalues.HIVE);
+                return {
+                    HELIOS: dec(parseFloat((helios) ? helios.balance : 0)),
+                    VALUE: parseFloat(val).toFixed(8)
+                }
+            } else return { HELIOS: 0, VALUE: 0 };
+        } else return { HELIOS: 0, VALUE: 0 };
     }
 
     async function getMarket (symbols) {
         const res = await ssc.find("market", "metrics", { symbol: { "$in": [...symbols] } }, 1000, 0, []);
         const { data } = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=hive&vs_currencies=usd");
-        var UPME = res.find(el => el.symbol === "UPME");
-        var WINEX = res.find(el => el.symbol === "WINEX");
+        var HELIOS = res.find(el => el.symbol === "HELIOS");
         return {
             HIVE: data.hive.usd,
-            UPME,
-            WINEX
+            HELIOS,
         }
     }
 
     async function refresh () {
-        marketvalues = await getMarket(["UPME", "WINEX"]);
-        $("#upme_price").text(marketvalues.UPME.lastPrice);
-        $("#winex_price").text(marketvalues.WINEX.lastPrice);
-        $("#upme_value").text((marketvalues.UPME.lastPrice * marketvalues.HIVE).toFixed(8));
-        $("#winex_value").text((marketvalues.WINEX.lastPrice * marketvalues.HIVE).toFixed(8));
+        marketvalues = await getMarket(["HELIOS"]);
+        $("#helios_price").text(marketvalues.HELIOS.lastPrice);
+        $("#helios_value").text((marketvalues.HELIOS.lastPrice * marketvalues.HIVE).toFixed(8));
+        $("#helios_vol").text((marketvalues.HELIOS.volume * marketvalues.HIVE).toFixed(8));
+        $("#helios_change").text(marketvalues.HELIOS.priceChangePercent);
     };
 
     $("#refresh").click(async function () {
@@ -106,10 +105,11 @@ $(window).bind("load", function() {
     $("#post").keyup(() => { updateBurn(); });
 
     async function updateBalance() {
+        marketvalues = await getMarket(["HELIOS"]);
         bal = await getBalances(user);
 
-        $("#upme").text(bal.UPME.toFixed(3));
-        $("#winex").text(bal.WINEX.toFixed(3));
+        $("#helios").text(bal.HELIOS.toFixed(3));
+        $("#helios_bal_value").text(bal.VALUE);
     }
 
     $("#checkbalance").click(async function() {
@@ -155,6 +155,7 @@ $(window).bind("load", function() {
                     const author = post_link.split("@")[1].split("/")[0];
                     const link = post_link.split("@")[1].split("/")[1];
                     post = await hive.api.getContentAsync(author, link);
+                    if (!post.created) throw error;
                 } catch (e) {
                     $("#status").text("Invalid Post Link");
                     $("#swap").removeAttr("disabled");
@@ -187,30 +188,10 @@ $(window).bind("load", function() {
                     updateBurn();
                 }
                 
-                if (currency === "UPME") {
+                if (currency === "HELIOS") {
                     hive_keychain.requestSendToken(
                         user,
-                        "upme.burn",
-                        amount,
-                        post_link,
-                        currency,
-                        async function (res) {
-                            if (res.success === true) {
-                                $("#status").text("Successfully Sent To Burn!");
-                                $("#status").addClass("text-success");
-                                await updateBalance();
-                                updateBurn();
-                            } else {
-                                $("#status").text("Transaction failed, Please try again.");
-                                updateBurn();
-                            }
-                            console.log(res);
-                        }
-                    );
-                } else if (currency === "WINEX") {
-                    hive_keychain.requestSendToken(
-                        user,
-                        "winex.burn",
+                        "helios.burn",
                         amount,
                         post_link,
                         currency,
