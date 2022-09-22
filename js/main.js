@@ -1,4 +1,7 @@
 $(window).bind("load", function() {
+    // remove unnessary parameters from url
+    window.history.replaceState({}, document.title, "/" + "");
+
     const ssc = new SSC("https://ha.herpc.dtools.dev");
     var user = null, bal = { HELIOS: 0, VALUE: 0 }, marketvalues;
     const min = {
