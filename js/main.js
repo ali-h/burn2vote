@@ -6,7 +6,7 @@ $(window).bind("load", function() {
     var user = null, bal = { UPME: 0, WINEX: 0 }, marketvalues;
     const min = {
         UPME: 20,
-        WINEX: 5
+        WINEX: 2
     };
 
     function dec(val) {
@@ -49,6 +49,7 @@ $(window).bind("load", function() {
     }
 
     async function refresh () {
+        updateMin();
         marketvalues = await getMarket(["UPME", "WINEX"]);
         $("#upme_price").text(marketvalues.UPME.lastPrice);
         $("#winex_price").text(marketvalues.WINEX.lastPrice);
@@ -62,11 +63,18 @@ $(window).bind("load", function() {
         $(this).removeAttr("disabled");
     });
 
+    function updateMin () {
+        const symbol = $("#input").val();
+        $("#minimum").text(`${min[symbol]} ${symbol}`);
+    }
+
     async function updateBurn(r) {
         try {
             const symbol = $("#input").val();
             const val = $("#inputquantity").val();
             const post_link = $("#post").val();
+
+            updateMin();
 
             const {
                 lastPrice,
